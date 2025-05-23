@@ -10,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// File to store the last IP address (outside web root)
-$ip_file = '../data/last_ip.txt';
+// File to store the last IP address (in protected directory)
+$ip_file = './data/.last_ip.dat';
 
 // Function to get the real IP address
 function getRealIpAddr() {
