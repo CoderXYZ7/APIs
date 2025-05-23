@@ -10,8 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// File to store the last IP address
-$ip_file = 'last_ip.txt';
+// File to store the last IP address (outside web root)
+$ip_file = '../data/last_ip.txt';
 
 // Function to get the real IP address
 function getRealIpAddr() {
@@ -31,6 +31,16 @@ function getRealIpAddr() {
 // Get current visitor's IP
 $current_ip = getRealIpAddr();
 $current_timestamp = date('Y-m-d H:i:s');
+
+// Create data directory if it doesn't exist
+$data_dir = dirname($ip_file);
+if (!is_dir($data_dir)) {
+    if (!mkdir($data_dir, 0755, true)) {
+        $response['error'] = 'Could not create data directory';
+        echo json_encode($response);
+        exit();
+    }
+}
 
 // Read the last IP from file (if exists)
 $last_ip_data = null;
