@@ -1,3 +1,0 @@
-# .htaccess in data folder
-Order Deny,Allow
-Deny from all
