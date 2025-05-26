@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anonymous Messaging System Test</title>
+    <title>Anonymous Messaging System Test - Multi-Account</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,7 +12,7 @@
             background-color: #f0f2f5;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Align to top */
+            align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
         }
@@ -22,14 +22,19 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px; /* Increased max-width */
             display: grid;
             gap: 20px;
             grid-template-columns: 1fr; /* Single column for mobile */
         }
         @media (min-width: 768px) {
             .container {
-                grid-template-columns: 1fr 1fr; /* Two columns for tablet/desktop */
+                grid-template-columns: repeat(2, 1fr); /* Two columns for tablet/desktop */
+            }
+        }
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: repeat(3, 1fr); /* Three columns for larger screens */
             }
         }
         .section {
@@ -37,6 +42,8 @@
             padding: 20px;
             border-radius: 8px;
             background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
         }
         h2 {
             color: #2d3748;
@@ -71,6 +78,7 @@
             font-weight: 600;
             transition: background-color 0.2s ease-in-out;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px; /* Add margin to buttons */
         }
         button:hover {
             background-color: #3182ce;
@@ -80,16 +88,23 @@
             padding: 15px;
             border-radius: 8px;
             margin-top: 15px;
-            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            white-space: pre-wrap;
             font-family: monospace;
             font-size: 0.9rem;
             color: #2d3748;
-            max-height: 300px; /* Limit height for long responses */
-            overflow-y: auto; /* Enable scrolling */
+            max-height: 200px; /* Adjusted height */
+            overflow-y: auto;
+            flex-grow: 1; /* Allow response box to grow */
         }
         .message-list {
             list-style-type: none;
             padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: #ffffff;
         }
         .message-item {
             background-color: #edf2f7;
@@ -107,36 +122,92 @@
             color: #718096;
             margin-top: 5px;
         }
-        .flex-row {
+        .account-item {
+            background-color: #e6fffa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #81e6d9;
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-direction: column;
+            gap: 5px;
         }
-        .flex-row > div {
-            flex: 1; /* Distribute space evenly */
-            min-width: 300px; /* Minimum width before wrapping */
+        .account-item.active {
+            background-color: #c6f6d5;
+            border-color: #48bb78;
+            font-weight: 600;
+        }
+        .account-item button {
+            background-color: #ed8936;
+            margin-top: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        .account-item button:hover {
+            background-color: #dd6b20;
+        }
+        .account-item .action-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .account-item .action-buttons button {
+            flex-grow: 1;
+        }
+        .account-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: #ffffff;
+        }
+        .api-url-input {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="section">
-            <h2>Create Account</h2>
-            <button onclick="createAccount()">Create New Account</button>
-            <div id="createAccountResponse" class="response-box"></div>
+        <div class="section col-span-full">
+            <h2>API Configuration</h2>
+            <label for="apiBaseUrl">API Base URL:</label>
+            <input type="text" id="apiBaseUrl" class="api-url-input" value="https://tmhome.tplinkdns.com/APIs/anonChat/">
+            <p class="text-sm text-gray-600">Ensure this points to the directory containing your PHP API files.</p>
         </div>
 
         <div class="section">
-            <h2>Your Account Details</h2>
-            <p><strong>Account ID:</strong> <span id="myAccountId"></span></p>
-            <p><strong>Secret Key:</strong> <span id="mySecretKey"></span></p>
-            <p><strong>Expires At:</strong> <span id="myExpiresAt"></span></p>
-            <button onclick="deleteMyAccount()">Delete My Account</button>
+            <h2>Account Management</h2>
+            <button onclick="createAccount()">Create New Account</button>
+            <div id="createAccountResponse" class="response-box"></div>
+            <hr class="my-4">
+            <h3>Your Managed Accounts:</h3>
+            <p class="text-sm text-gray-600 mb-2">Click "Set Active" to use an account for sending/getting messages.</p>
+            <div id="accountListContainer" class="account-list-container">
+                <div id="managedAccountsList">No accounts managed yet.</div>
+            </div>
+            <button onclick="deleteAllAccounts()" class="bg-red-500 hover:bg-red-700">Delete All Managed Accounts</button>
+            <div id="deleteAllAccountsResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Current Active Account</h2>
+            <p><strong>Account ID:</strong> <span id="myAccountId">N/A</span></p>
+            <p><strong>Secret Key:</strong> <span id="mySecretKey">N/A</span></p>
+            <p><strong>Expires At:</strong> <span id="myExpiresAt">N/A</span></p>
+            <hr class="my-4">
+            <button onclick="deleteActiveAccount()" class="bg-red-500 hover:bg-red-700">Delete Active Account</button>
             <div id="deleteAccountResponse" class="response-box"></div>
         </div>
 
         <div class="section">
             <h2>Send Message</h2>
+            <p class="text-sm text-gray-600 mb-2">Message will be sent from the <strong>Active Account</strong>.</p>
             <label for="receiverAccountId">Receiver Account ID:</label>
             <input type="text" id="receiverAccountId" placeholder="Enter receiver's Account ID">
             <label for="messageContent">Message:</label>
@@ -147,64 +218,186 @@
 
         <div class="section">
             <h2>Get My Messages</h2>
-            <button onclick="getMessages()">Get My Messages</button>
+            <p class="text-sm text-gray-600 mb-2">Messages will be retrieved for the <strong>Active Account</strong>.</p>
+            <button onclick="getMessagesForActiveAccount()">Get Messages for Active Account</button>
+            <button onclick="getAllMessagesForAllAccounts()">Get All Messages (All Managed Accounts)</button>
             <div id="getMessagesResponse" class="response-box"></div>
+            <h3>Received Messages:</h3>
             <ul id="messageList" class="message-list"></ul>
         </div>
     </div>
 
     <script>
-        // Store account details in sessionStorage for persistence across page refreshes
-        // In a real application, this would be handled more securely (e.g., server-side sessions)
-        let myAccountId = sessionStorage.getItem('myAccountId') || '';
-        let mySecretKey = sessionStorage.getItem('mySecretKey') || '';
-        let myExpiresAt = sessionStorage.getItem('myExpiresAt') || '';
+        // --- API Configuration ---
+        const API_BASE_URL_INPUT = document.getElementById('apiBaseUrl');
 
-        // Update UI with stored account details on load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateAccountDetailsUI();
-        });
+        // --- Global State ---
+        let accounts = []; // Array to store all managed accounts
+        let activeAccountId = null; // Stores the ID of the currently active account
 
-        function updateAccountDetailsUI() {
-            document.getElementById('myAccountId').textContent = myAccountId;
-            document.getElementById('mySecretKey').textContent = mySecretKey;
-            document.getElementById('myExpiresAt').textContent = myExpiresAt;
-        }
+        // --- DOM Elements ---
+        const myAccountIdSpan = document.getElementById('myAccountId');
+        const mySecretKeySpan = document.getElementById('mySecretKey');
+        const myExpiresAtSpan = document.getElementById('myExpiresAt');
+        const managedAccountsListDiv = document.getElementById('managedAccountsList');
+        const messageListUl = document.getElementById('messageList');
 
-        async function createAccount() {
-            const responseBox = document.getElementById('createAccountResponse');
-            responseBox.textContent = 'Creating account...';
-            try {
-                const response = await fetch('create_account.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await response.json();
+        // --- Utility Functions ---
+
+        /**
+         * Displays a JSON response in a designated HTML element.
+         * @param {string} elementId - The ID of the HTML element to update.
+         * @param {object} data - The JSON data to display.
+         */
+        function displayResponse(elementId, data) {
+            const responseBox = document.getElementById(elementId);
+            if (responseBox) {
                 responseBox.textContent = JSON.stringify(data, null, 2);
-
-                if (data.status === 'success') {
-                    myAccountId = data.account_id;
-                    mySecretKey = data.secret_key;
-                    myExpiresAt = data.expires_at;
-                    sessionStorage.setItem('myAccountId', myAccountId);
-                    sessionStorage.setItem('mySecretKey', mySecretKey);
-                    sessionStorage.setItem('myExpiresAt', myExpiresAt);
-                    updateAccountDetailsUI();
-                }
-            } catch (error) {
-                responseBox.textContent = `Error: ${error.message}`;
-                console.error('Error creating account:', error);
             }
         }
 
-        async function sendMessage() {
-            const responseBox = document.getElementById('sendMessageResponse');
-            responseBox.textContent = 'Sending message...';
+        /**
+         * Loads accounts from localStorage.
+         */
+        function loadAccounts() {
+            const storedAccounts = localStorage.getItem('anonymousMessagingAccounts');
+            if (storedAccounts) {
+                accounts = JSON.parse(storedAccounts);
+                // Set the first account as active if none is active
+                if (accounts.length > 0 && !activeAccountId) {
+                    activeAccountId = accounts[0].id;
+                }
+            }
+        }
 
-            if (!myAccountId || !mySecretKey) {
-                responseBox.textContent = 'Please create an account first.';
+        /**
+         * Saves accounts to localStorage.
+         */
+        function saveAccounts() {
+            localStorage.setItem('anonymousMessagingAccounts', JSON.stringify(accounts));
+        }
+
+        /**
+         * Renders the list of managed accounts in the UI.
+         */
+        function renderAccounts() {
+            if (accounts.length === 0) {
+                managedAccountsListDiv.innerHTML = 'No accounts managed yet.';
+                myAccountIdSpan.textContent = 'N/A';
+                mySecretKeySpan.textContent = 'N/A';
+                myExpiresAtSpan.textContent = 'N/A';
+                activeAccountId = null;
+                return;
+            }
+
+            managedAccountsListDiv.innerHTML = '';
+            accounts.forEach(account => {
+                const accountDiv = document.createElement('div');
+                accountDiv.className = `account-item ${account.id === activeAccountId ? 'active' : ''}`;
+                accountDiv.innerHTML = `
+                    <p><strong>ID:</strong> ${account.id}</p>
+                    <p><strong>Key:</strong> ${account.secret}</p>
+                    <p><strong>Expires:</strong> ${new Date(account.expires_at).toLocaleString()}</p>
+                    <div class="action-buttons">
+                        <button onclick="setActiveAccount('${account.id}')">Set Active</button>
+                        <button onclick="deleteAccount('${account.id}')" class="bg-red-500 hover:bg-red-700">Delete</button>
+                    </div>
+                `;
+                managedAccountsListDiv.appendChild(accountDiv);
+            });
+
+            // Update active account display
+            const activeAccount = accounts.find(acc => acc.id === activeAccountId);
+            if (activeAccount) {
+                myAccountIdSpan.textContent = activeAccount.id;
+                mySecretKeySpan.textContent = activeAccount.secret;
+                myExpiresAtSpan.textContent = new Date(activeAccount.expires_at).toLocaleString();
+            } else {
+                myAccountIdSpan.textContent = 'N/A';
+                mySecretKeySpan.textContent = 'N/A';
+                myExpiresAtSpan.textContent = 'N/A';
+            }
+        }
+
+        /**
+         * Sets the active account and updates the UI.
+         * @param {string} accountId - The ID of the account to set as active.
+         */
+        function setActiveAccount(accountId) {
+            activeAccountId = accountId;
+            saveAccounts(); // Save active account preference
+            renderAccounts();
+            messageListUl.innerHTML = ''; // Clear messages when switching active account
+            displayResponse('getMessagesResponse', {}); // Clear get messages response
+        }
+
+        // --- API Calls ---
+
+        /**
+         * Fetches data from a given API endpoint.
+         * @param {string} endpoint - The API endpoint (e.g., 'create_account.php').
+         * @param {object} body - The request body.
+         * @returns {Promise<object>} - The JSON response from the API.
+         */
+        async function callApi(endpoint, body = {}) {
+            const apiUrl = API_BASE_URL_INPUT.value + endpoint;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text(); // Get raw text for debugging non-JSON errors
+                    throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error calling ${endpoint}:`, error);
+                throw error; // Re-throw to be caught by the calling function
+            }
+        }
+
+        /**
+         * Creates a new anonymous account.
+         */
+        async function createAccount() {
+            displayResponse('createAccountResponse', { status: 'info', message: 'Creating account...' });
+            try {
+                const data = await callApi('create_account.php');
+                displayResponse('createAccountResponse', data);
+
+                if (data.status === 'success') {
+                    const newAccount = {
+                        id: data.account_id,
+                        secret: data.secret_key,
+                        expires_at: data.expires_at
+                    };
+                    accounts.push(newAccount);
+                    saveAccounts();
+                    setActiveAccount(newAccount.id); // Set the newly created account as active
+                }
+            } catch (error) {
+                displayResponse('createAccountResponse', { status: 'error', message: `Failed to create account: ${error.message}` });
+            }
+        }
+
+        /**
+         * Sends a message from the active account to a specified receiver.
+         */
+        async function sendMessage() {
+            displayResponse('sendMessageResponse', { status: 'info', message: 'Sending message...' });
+
+            if (!activeAccountId) {
+                displayResponse('sendMessageResponse', { status: 'error', message: 'Please create or select an active account first.' });
+                return;
+            }
+
+            const activeAccount = accounts.find(acc => acc.id === activeAccountId);
+            if (!activeAccount) {
+                displayResponse('sendMessageResponse', { status: 'error', message: 'Active account not found in managed accounts.' });
                 return;
             }
 
@@ -212,55 +405,34 @@
             const messageContent = document.getElementById('messageContent').value;
 
             if (!receiverAccountId || !messageContent) {
-                responseBox.textContent = 'Please fill in receiver ID and message content.';
+                displayResponse('sendMessageResponse', { status: 'error', message: 'Please fill in receiver ID and message content.' });
                 return;
             }
 
             try {
-                const response = await fetch('send_message.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender_account_id: myAccountId,
-                        sender_secret_key: mySecretKey,
-                        receiver_account_id: receiverAccountId,
-                        message_content: messageContent
-                    })
+                const data = await callApi('send_message.php', {
+                    sender_account_id: activeAccount.id,
+                    sender_secret_key: activeAccount.secret,
+                    receiver_account_id: receiverAccountId,
+                    message_content: messageContent
                 });
-                const data = await response.json();
-                responseBox.textContent = JSON.stringify(data, null, 2);
+                displayResponse('sendMessageResponse', data);
             } catch (error) {
-                responseBox.textContent = `Error: ${error.message}`;
-                console.error('Error sending message:', error);
+                displayResponse('sendMessageResponse', { status: 'error', message: `Failed to send message: ${error.message}` });
             }
         }
 
-        async function getMessages() {
-            const responseBox = document.getElementById('getMessagesResponse');
-            const messageList = document.getElementById('messageList');
-            responseBox.textContent = 'Fetching messages...';
-            messageList.innerHTML = ''; // Clear previous messages
-
-            if (!myAccountId || !mySecretKey) {
-                responseBox.textContent = 'Please create an account first.';
-                return;
-            }
-
+        /**
+         * Gets messages for a specific account and displays them.
+         * @param {object} account - The account object ({ id, secret }).
+         * @param {HTMLElement} targetMessageListUl - The UL element to append messages to.
+         */
+        async function getMessages(account, targetMessageListUl) {
             try {
-                const response = await fetch('get_messages.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        account_id: myAccountId,
-                        secret_key: mySecretKey
-                    })
+                const data = await callApi('get_messages.php', {
+                    account_id: account.id,
+                    secret_key: account.secret
                 });
-                const data = await response.json();
-                responseBox.textContent = JSON.stringify(data, null, 2);
 
                 if (data.status === 'success' && data.messages && data.messages.length > 0) {
                     data.messages.forEach(msg => {
@@ -271,58 +443,142 @@
                             <p>${msg.message_content}</p>
                             <small>Sent: ${new Date(msg.sent_at).toLocaleString()}</small>
                         `;
-                        messageList.appendChild(li);
+                        targetMessageListUl.appendChild(li);
                     });
                 } else if (data.status === 'success' && data.messages.length === 0) {
-                    messageList.innerHTML = '<li class="message-item">No new messages.</li>';
+                    const li = document.createElement('li');
+                    li.className = 'message-item';
+                    li.textContent = `No new messages for ${account.id.substring(0, 8)}...`;
+                    targetMessageListUl.appendChild(li);
+                } else {
+                     const li = document.createElement('li');
+                     li.className = 'message-item bg-red-100 border-red-400';
+                     li.textContent = `Error getting messages for ${account.id.substring(0, 8)}...: ${data.message || 'Unknown error'}`;
+                     targetMessageListUl.appendChild(li);
                 }
             } catch (error) {
-                responseBox.textContent = `Error: ${error.message}`;
-                console.error('Error getting messages:', error);
+                const li = document.createElement('li');
+                li.className = 'message-item bg-red-100 border-red-400';
+                li.textContent = `Network error for ${account.id.substring(0, 8)}...: ${error.message}`;
+                targetMessageListUl.appendChild(li);
             }
         }
 
-        async function deleteMyAccount() {
-            const responseBox = document.getElementById('deleteAccountResponse');
-            responseBox.textContent = 'Deleting account...';
+        /**
+         * Gets messages for the currently active account.
+         */
+        async function getMessagesForActiveAccount() {
+            displayResponse('getMessagesResponse', { status: 'info', message: 'Fetching messages for active account...' });
+            messageListUl.innerHTML = ''; // Clear previous messages
 
-            if (!myAccountId || !mySecretKey) {
-                responseBox.textContent = 'No account to delete.';
+            if (!activeAccountId) {
+                displayResponse('getMessagesResponse', { status: 'error', message: 'Please select an active account first.' });
                 return;
             }
 
-            try {
-                const response = await fetch('delete_account.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        account_id: myAccountId,
-                        secret_key: mySecretKey
-                    })
-                });
-                const data = await response.json();
-                responseBox.textContent = JSON.stringify(data, null, 2);
-
-                if (data.status === 'success') {
-                    // Clear stored account details
-                    myAccountId = '';
-                    mySecretKey = '';
-                    myExpiresAt = '';
-                    sessionStorage.removeItem('myAccountId');
-                    sessionStorage.removeItem('mySecretKey');
-                    sessionStorage.removeItem('myExpiresAt');
-                    updateAccountDetailsUI();
-                    document.getElementById('messageList').innerHTML = ''; // Clear messages
-                    document.getElementById('sendMessageResponse').textContent = '';
-                    document.getElementById('getMessagesResponse').textContent = '';
-                }
-            } catch (error) {
-                responseBox.textContent = `Error: ${error.message}`;
-                console.error('Error deleting account:', error);
+            const activeAccount = accounts.find(acc => acc.id === activeAccountId);
+            if (activeAccount) {
+                await getMessages(activeAccount, messageListUl);
+                displayResponse('getMessagesResponse', { status: 'success', message: 'Messages fetched for active account.' });
+            } else {
+                displayResponse('getMessagesResponse', { status: 'error', message: 'Active account not found in managed accounts.' });
             }
         }
+
+        /**
+         * Gets messages for ALL managed accounts and displays them in a consolidated list.
+         */
+        async function getAllMessagesForAllAccounts() {
+            displayResponse('getMessagesResponse', { status: 'info', message: 'Fetching messages for ALL managed accounts...' });
+            messageListUl.innerHTML = ''; // Clear previous messages
+
+            if (accounts.length === 0) {
+                displayResponse('getMessagesResponse', { status: 'info', message: 'No accounts to fetch messages for.' });
+                return;
+            }
+
+            for (const account of accounts) {
+                const headerLi = document.createElement('li');
+                headerLi.className = 'message-item bg-blue-100 border-blue-400 font-bold';
+                headerLi.textContent = `--- Messages for Account: ${account.id.substring(0, 8)}... ---`;
+                messageListUl.appendChild(headerLi);
+                await getMessages(account, messageListUl);
+            }
+            displayResponse('getMessagesResponse', { status: 'success', message: 'Messages fetched for all managed accounts.' });
+        }
+
+        /**
+         * Deletes a specific account.
+         * @param {string} accountIdToDelete - The ID of the account to delete.
+         */
+        async function deleteAccount(accountIdToDelete) {
+            const accountToDelete = accounts.find(acc => acc.id === accountIdToDelete);
+            if (!accountToDelete) {
+                displayResponse('deleteAccountResponse', { status: 'error', message: 'Account not found in managed accounts.' });
+                return;
+            }
+
+            displayResponse('deleteAccountResponse', { status: 'info', message: `Deleting account ${accountIdToDelete.substring(0, 8)}...` });
+
+            try {
+                const data = await callApi('delete_account.php', {
+                    account_id: accountToDelete.id,
+                    secret_key: accountToDelete.secret
+                });
+                displayResponse('deleteAccountResponse', data);
+
+                if (data.status === 'success') {
+                    accounts = accounts.filter(acc => acc.id !== accountIdToDelete);
+                    saveAccounts();
+                    if (activeAccountId === accountIdToDelete) {
+                        activeAccountId = accounts.length > 0 ? accounts[0].id : null; // Set first account as active or null
+                    }
+                    renderAccounts();
+                    messageListUl.innerHTML = ''; // Clear messages
+                }
+            } catch (error) {
+                displayResponse('deleteAccountResponse', { status: 'error', message: `Failed to delete account: ${error.message}` });
+            }
+        }
+
+        /**
+         * Deletes the currently active account.
+         */
+        async function deleteActiveAccount() {
+            if (!activeAccountId) {
+                displayResponse('deleteAccountResponse', { status: 'error', message: 'No active account to delete.' });
+                return;
+            }
+            await deleteAccount(activeAccountId);
+        }
+
+        /**
+         * Deletes all managed accounts.
+         */
+        async function deleteAllAccounts() {
+            displayResponse('deleteAllAccountsResponse', { status: 'info', message: 'Deleting all accounts...' });
+            if (accounts.length === 0) {
+                displayResponse('deleteAllAccountsResponse', { status: 'info', message: 'No accounts to delete.' });
+                return;
+            }
+
+            // Create a copy to iterate while modifying the original array
+            const accountsToDelete = [...accounts];
+            for (const account of accountsToDelete) {
+                await deleteAccount(account.id); // This will modify the 'accounts' array
+            }
+            displayResponse('deleteAllAccountsResponse', { status: 'success', message: 'All managed accounts deleted.' });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAccounts();
+            renderAccounts();
+            // Set initial active account if available
+            if (accounts.length > 0 && !activeAccountId) {
+                setActiveAccount(accounts[0].id);
+            }
+        });
     </script>
 </body>
 </html>
