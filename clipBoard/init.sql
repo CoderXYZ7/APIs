@@ -7,3 +7,7 @@ CREATE TABLE IF NOT EXISTS clipboard_entries (
     content LONGTEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE USER 'remote_clipboard'@'localhost' IDENTIFIED BY 'clipPSW';
+GRANT SELECT, INSERT, UPDATE, DELETE ON remote_clipboard.* TO 'remote_clipboard'@'localhost';
+FLUSH PRIVILEGES;

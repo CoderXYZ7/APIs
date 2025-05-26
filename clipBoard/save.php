@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // IMPORTANT: Replace with your actual database credentials
 $host = 'localhost';
 $db   = 'remote_clipboard';
-$user = 'root'; // Change this to a less privileged user in production
-$pass = '';     // Change this to your database password
+$user = 'remote_clipboard'; // Change this to a less privileged user in production
+$pass = 'clipPSW';     // Change this to your database password
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
