@@ -1,0 +1,9 @@
+CREATE DATABASE IF NOT EXISTS remote_clipboard;
+
+USE remote_clipboard;
+
+CREATE TABLE IF NOT EXISTS clipboard_entries (
+    id VARCHAR(255) PRIMARY KEY,
+    content LONGTEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

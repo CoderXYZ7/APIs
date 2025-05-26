@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Clipboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .input-group, .output-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        label {
+            font-weight: 600;
+            color: #333;
+        }
+        input[type="text"],
+        textarea {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6; /* Tailwind blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Tailwind blue-500 with opacity */
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        #saveButton {
+            background-color: #22c55e; /* Tailwind green-500 */
+            color: white;
+            border: none;
+        }
+        #saveButton:hover {
+            background-color: #16a34a; /* Tailwind green-600 */
+        }
+        #retrieveButton {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+            border: none;
+        }
+        #retrieveButton:hover {
+            background-color: #2563eb; /* Tailwind blue-600 */
+        }
+        #copyButton {
+            background-color: #f97316; /* Tailwind orange-500 */
+            color: white;
+            border: none;
+        }
+        #copyButton:hover {
+            background-color: #ea580c; /* Tailwind orange-600 */
+        }
+        .message-box {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            word-wrap: break-word; /* Ensure long messages wrap */
+        }
+        .message-box.success {
+            background-color: #d1fae5; /* Tailwind green-100 */
+            color: #065f46; /* Tailwind green-800 */
+            border: 1px solid #34d399; /* Tailwind green-400 */
+        }
+        .message-box.error {
+            background-color: #fee2e2; /* Tailwind red-100 */
+            color: #991b1b; /* Tailwind red-800 */
+            border: 1px solid #f87171; /* Tailwind red-400 */
+        }
+        .output-display {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            background-color: #f9fafb;
+            color: #4b5563;
+            overflow-wrap: break-word; /* Ensures long text wraps */
+            word-break: break-all; /* Breaks words if necessary */
+        }
+        .output-display img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px dashed #cbd5e1;
+            padding: 5px;
+            display: none; /* Hidden by default */
+        }
+        #fileInput {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800">Remote Clipboard</h1>
+
+        <div class="input-group">
+            <label for="clipboardId">Clipboard ID:</label>
+            <input type="text" id="clipboardId" placeholder="Enter a unique ID (e.g., my-secret-clip)" class="w-full">
+        </div>
+
+        <div class="input-group">
+            <label for="clipboardContent">Text Content:</label>
+            <textarea id="clipboardContent" placeholder="Enter text here..." class="w-full"></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="fileInput">Image (optional):</label>
+            <input type="file" id="fileInput" accept="image/*" class="w-full">
+            <img id="imagePreview" class="image-preview" src="#" alt="Image Preview">
+        </div>
+
+        <div class="button-group">
+            <button id="saveButton">Save Content</button>
+            <button id="retrieveButton">Retrieve Content</button>
+        </div>
+
+        <div id="messageBox" class="message-box hidden"></div>
+
+        <div class="output-group">
+            <label>Retrieved Content:</label>
+            <div id="outputDisplay" class="output-display">
+                <p class="text-gray-500">Content will appear here...</p>
+            </div>
+            <button id="copyButton" class="mt-2" style="display: none;">Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration for your API endpoints
+        // IMPORTANT: Replace with the actual URL where your PHP files are hosted
+        const API_BASE_URL = 'http://tmhome.tplinkdns.com/APIs/clipBoard/';
+
+        const clipboardIdInput = document.getElementById('clipboardId');
+        const clipboardContentTextarea = document.getElementById('clipboardContent');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const saveButton = document.getElementById('saveButton');
+        const retrieveButton = document.getElementById('retrieveButton');
+        const messageBox = document.getElementById('messageBox');
+        const outputDisplay = document.getElementById('outputDisplay');
+        const copyButton = document.getElementById('copyButton');
+
+        let base64Image = null; // To store the base64 representation of the selected image
+
+        // Function to display messages to the user
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Add type class for styling (success/error)
+            messageBox.classList.remove('hidden'); // Make it visible
+            setTimeout(() => {
+                messageBox.classList.add('hidden'); // Hide after 5 seconds
+            }, 5000);
+        }
+
+        // Event listener for image file input
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    base64Image = e.target.result; // Store base64 string
+                    imagePreview.src = base64Image; // Display preview
+                    imagePreview.style.display = 'block'; // Show image preview
+                    clipboardContentTextarea.value = ''; // Clear text content when image is selected
+                    clipboardContentTextarea.disabled = true; // Disable text area
+                };
+                reader.onerror = () => {
+                    showMessage('Error reading file.', 'error');
+                    base64Image = null;
+                    imagePreview.style.display = 'none';
+                    clipboardContentTextarea.disabled = false;
+                };
+                reader.readAsDataURL(file); // Read file as base64 data URL
+            } else {
+                base64Image = null;
+                imagePreview.style.display = 'none';
+                imagePreview.src = '#';
+                clipboardContentTextarea.disabled = false; // Enable text area if no image
+            }
+        });
+
+        // Event listener for text area to re-enable image input if text is typed
+        clipboardContentTextarea.addEventListener('input', () => {
+            if (clipboardContentTextarea.value.trim() !== '') {
+                fileInput.value = ''; // Clear file input
+                base64Image = null;
+                imagePreview.style.display = 'none';
+                imagePreview.src = '#';
+            }
+            // If text area is empty, re-enable file input
+            fileInput.disabled = (clipboardContentTextarea.value.trim() !== '');
+        });
+
+        // Event listener for save button
+        saveButton.addEventListener('click', async () => {
+            const id = clipboardIdInput.value.trim();
+            let contentToSave = '';
+
+            // Determine content based on whether an image is selected or text is entered
+            if (base64Image) {
+                contentToSave = base64Image;
+            } else if (clipboardContentTextarea.value.trim() !== '') {
+                contentToSave = clipboardContentTextarea.value.trim();
+            } else {
+                showMessage('Please enter some text or select an image to save.', 'error');
+                return;
+            }
+
+            if (!id) {
+                showMessage('Please enter a Clipboard ID.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/save.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id, content: contentToSave }),
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showMessage(data.message, 'success');
+                    // Clear input fields after successful save
+                    clipboardContentTextarea.value = '';
+                    fileInput.value = '';
+                    base64Image = null;
+                    imagePreview.style.display = 'none';
+                    imagePreview.src = '#';
+                    clipboardContentTextarea.disabled = false; // Re-enable text area
+                    fileInput.disabled = false; // Re-enable file input
+                } else {
+                    showMessage(`Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('An error occurred while saving content. Check console for details.', 'error');
+            }
+        });
+
+        // Event listener for retrieve button
+        retrieveButton.addEventListener('click', async () => {
+            const id = clipboardIdInput.value.trim();
+
+            if (!id) {
+                showMessage('Please enter a Clipboard ID to retrieve.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/get.php?id=${encodeURIComponent(id)}`);
+                const data = await response.json();
+
+                outputDisplay.innerHTML = ''; // Clear previous content
+                copyButton.style.display = 'none'; // Hide copy button by default
+
+                if (data.status === 'success') {
+                    const retrievedContent = data.content;
+                    // Check if the content is a base64 image (starts with data:image/)
+                    if (retrievedContent.startsWith('data:image/')) {
+                        const img = document.createElement('img');
+                        img.src = retrievedContent;
+                        img.alt = 'Retrieved Image';
+                        outputDisplay.appendChild(img);
+                        showMessage('Image retrieved successfully!', 'success');
+                    } else {
+                        // Otherwise, display as text
+                        const p = document.createElement('p');
+                        p.textContent = retrievedContent;
+                        outputDisplay.appendChild(p);
+                        showMessage('Text retrieved successfully!', 'success');
+                    }
+                    copyButton.style.display = 'block'; // Show copy button for any content
+                } else {
+                    showMessage(`Error: ${data.message}`, 'error');
+                    outputDisplay.innerHTML = '<p class="text-gray-500">Content not found or an error occurred.</p>';
+                }
+            } catch (error) {
+                console.error('Retrieve error:', error);
+                showMessage('An error occurred while retrieving content. Check console for details.', 'error');
+                outputDisplay.innerHTML = '<p class="text-gray-500">Failed to retrieve content due to a network error.</p>';
+            }
+        });
+
+        // Event listener for copy button
+        copyButton.addEventListener('click', () => {
+            const contentToCopy = outputDisplay.querySelector('p') ? outputDisplay.querySelector('p').textContent : '';
+            const imageToCopy = outputDisplay.querySelector('img') ? outputDisplay.querySelector('img').src : '';
+
+            if (contentToCopy) {
+                // For text content
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = contentToCopy;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('Text copied to clipboard!', 'success');
+                } catch (err) {
+                    showMessage('Failed to copy text. Please copy manually.', 'error');
+                }
+                document.body.removeChild(tempTextArea);
+            } else if (imageToCopy) {
+                // For image content (base64 string)
+                // Note: Directly copying an image from a data URL to the clipboard is complex
+                // and not universally supported by `document.execCommand('copy')` for images.
+                // It usually copies the data URL string itself.
+                // A more robust solution for copying actual image data would involve a more complex
+                // approach using the Clipboard API (navigator.clipboard.write) which might have
+                // security restrictions in iframes or older browsers.
+                // For simplicity, we'll copy the base64 string.
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = imageToCopy;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('Image (base64 string) copied to clipboard!', 'success');
+                } catch (err) {
+                    showMessage('Failed to copy image (base64 string). Please copy manually.', 'error');
+                }
+                document.body.removeChild(tempTextArea);
+            } else {
+                showMessage('Nothing to copy.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
