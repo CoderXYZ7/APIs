@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Messaging System Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr; /* Single column for mobile */
+        }
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr; /* Two columns for tablet/desktop */
+            }
+        }
+        .section {
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f8fafc;
+        }
+        h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #4299e1;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        button:hover {
+            background-color: #3182ce;
+        }
+        .response-box {
+            background-color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #2d3748;
+            max-height: 300px; /* Limit height for long responses */
+            overflow-y: auto; /* Enable scrolling */
+        }
+        .message-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .message-item {
+            background-color: #edf2f7;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #63b3ed;
+        }
+        .message-item strong {
+            color: #2b6cb0;
+        }
+        .message-item small {
+            display: block;
+            font-size: 0.8em;
+            color: #718096;
+            margin-top: 5px;
+        }
+        .flex-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .flex-row > div {
+            flex: 1; /* Distribute space evenly */
+            min-width: 300px; /* Minimum width before wrapping */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h2>Create Account</h2>
+            <button onclick="createAccount()">Create New Account</button>
+            <div id="createAccountResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Your Account Details</h2>
+            <p><strong>Account ID:</strong> <span id="myAccountId"></span></p>
+            <p><strong>Secret Key:</strong> <span id="mySecretKey"></span></p>
+            <p><strong>Expires At:</strong> <span id="myExpiresAt"></span></p>
+            <button onclick="deleteMyAccount()">Delete My Account</button>
+            <div id="deleteAccountResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Send Message</h2>
+            <label for="receiverAccountId">Receiver Account ID:</label>
+            <input type="text" id="receiverAccountId" placeholder="Enter receiver's Account ID">
+            <label for="messageContent">Message:</label>
+            <textarea id="messageContent" rows="4" placeholder="Type your message here..."></textarea>
+            <button onclick="sendMessage()">Send Message</button>
+            <div id="sendMessageResponse" class="response-box"></div>
+        </div>
+
+        <div class="section">
+            <h2>Get My Messages</h2>
+            <button onclick="getMessages()">Get My Messages</button>
+            <div id="getMessagesResponse" class="response-box"></div>
+            <ul id="messageList" class="message-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Store account details in sessionStorage for persistence across page refreshes
+        // In a real application, this would be handled more securely (e.g., server-side sessions)
+        let myAccountId = sessionStorage.getItem('myAccountId') || '';
+        let mySecretKey = sessionStorage.getItem('mySecretKey') || '';
+        let myExpiresAt = sessionStorage.getItem('myExpiresAt') || '';
+
+        // Update UI with stored account details on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAccountDetailsUI();
+        });
+
+        function updateAccountDetailsUI() {
+            document.getElementById('myAccountId').textContent = myAccountId;
+            document.getElementById('mySecretKey').textContent = mySecretKey;
+            document.getElementById('myExpiresAt').textContent = myExpiresAt;
+        }
+
+        async function createAccount() {
+            const responseBox = document.getElementById('createAccountResponse');
+            responseBox.textContent = 'Creating account...';
+            try {
+                const response = await fetch('create_account.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                responseBox.textContent = JSON.stringify(data, null, 2);
+
+                if (data.status === 'success') {
+                    myAccountId = data.account_id;
+                    mySecretKey = data.secret_key;
+                    myExpiresAt = data.expires_at;
+                    sessionStorage.setItem('myAccountId', myAccountId);
+                    sessionStorage.setItem('mySecretKey', mySecretKey);
+                    sessionStorage.setItem('myExpiresAt', myExpiresAt);
+                    updateAccountDetailsUI();
+                }
+            } catch (error) {
+                responseBox.textContent = `Error: ${error.message}`;
+                console.error('Error creating account:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const responseBox = document.getElementById('sendMessageResponse');
+            responseBox.textContent = 'Sending message...';
+
+            if (!myAccountId || !mySecretKey) {
+                responseBox.textContent = 'Please create an account first.';
+                return;
+            }
+
+            const receiverAccountId = document.getElementById('receiverAccountId').value;
+            const messageContent = document.getElementById('messageContent').value;
+
+            if (!receiverAccountId || !messageContent) {
+                responseBox.textContent = 'Please fill in receiver ID and message content.';
+                return;
+            }
+
+            try {
+                const response = await fetch('send_message.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sender_account_id: myAccountId,
+                        sender_secret_key: mySecretKey,
+                        receiver_account_id: receiverAccountId,
+                        message_content: messageContent
+                    })
+                });
+                const data = await response.json();
+                responseBox.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseBox.textContent = `Error: ${error.message}`;
+                console.error('Error sending message:', error);
+            }
+        }
+
+        async function getMessages() {
+            const responseBox = document.getElementById('getMessagesResponse');
+            const messageList = document.getElementById('messageList');
+            responseBox.textContent = 'Fetching messages...';
+            messageList.innerHTML = ''; // Clear previous messages
+
+            if (!myAccountId || !mySecretKey) {
+                responseBox.textContent = 'Please create an account first.';
+                return;
+            }
+
+            try {
+                const response = await fetch('get_messages.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        account_id: myAccountId,
+                        secret_key: mySecretKey
+                    })
+                });
+                const data = await response.json();
+                responseBox.textContent = JSON.stringify(data, null, 2);
+
+                if (data.status === 'success' && data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        const li = document.createElement('li');
+                        li.className = 'message-item';
+                        li.innerHTML = `
+                            <strong>From: ${msg.sender_account_id}</strong>
+                            <p>${msg.message_content}</p>
+                            <small>Sent: ${new Date(msg.sent_at).toLocaleString()}</small>
+                        `;
+                        messageList.appendChild(li);
+                    });
+                } else if (data.status === 'success' && data.messages.length === 0) {
+                    messageList.innerHTML = '<li class="message-item">No new messages.</li>';
+                }
+            } catch (error) {
+                responseBox.textContent = `Error: ${error.message}`;
+                console.error('Error getting messages:', error);
+            }
+        }
+
+        async function deleteMyAccount() {
+            const responseBox = document.getElementById('deleteAccountResponse');
+            responseBox.textContent = 'Deleting account...';
+
+            if (!myAccountId || !mySecretKey) {
+                responseBox.textContent = 'No account to delete.';
+                return;
+            }
+
+            try {
+                const response = await fetch('delete_account.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        account_id: myAccountId,
+                        secret_key: mySecretKey
+                    })
+                });
+                const data = await response.json();
+                responseBox.textContent = JSON.stringify(data, null, 2);
+
+                if (data.status === 'success') {
+                    // Clear stored account details
+                    myAccountId = '';
+                    mySecretKey = '';
+                    myExpiresAt = '';
+                    sessionStorage.removeItem('myAccountId');
+                    sessionStorage.removeItem('mySecretKey');
+                    sessionStorage.removeItem('myExpiresAt');
+                    updateAccountDetailsUI();
+                    document.getElementById('messageList').innerHTML = ''; // Clear messages
+                    document.getElementById('sendMessageResponse').textContent = '';
+                    document.getElementById('getMessagesResponse').textContent = '';
+                }
+            } catch (error) {
+                responseBox.textContent = `Error: ${error.message}`;
+                console.error('Error deleting account:', error);
+            }
+        }
+    </script>
+</body>
+</html>
