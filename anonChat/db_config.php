@@ -2,7 +2,7 @@
 // php/db_config.php
 
 // Database connection parameters
-define('DB_HOST', 'localhost:8080/anonChat');
+define('DB_HOST', 'localhost');
 define('DB_NAME', 'anonymous_messaging');
 define('DB_USER', 'anonChat'); // <<< IMPORTANT: Change this to your MariaDB username
 define('DB_PASS', 'anonPsw'); // <<< IMPORTANT: Change this to your MariaDB password
