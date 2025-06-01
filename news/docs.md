@@ -10,7 +10,7 @@
 
 ### Base URL
 ```
-http://your-domain.com/api.php
+https://tmhome.tplinkdns.com/APIs/news/api.php
 ```
 
 ### News Endpoints
@@ -128,27 +128,27 @@ GET /api.php?action=get&type=events&with_news=true
 
 ### Get Latest 5 News Articles
 ```bash
-curl "http://your-domain.com/api.php?action=get&type=news&limit=5"
+curl "https://tmhome.tplinkdns.com/APIs/news/api.php?action=get&type=news&limit=5"
 ```
 
 ### Get News with Connected Events
 ```bash
-curl "http://your-domain.com/api.php?action=get&type=news&with_events=true"
+curl "https://tmhome.tplinkdns.com/APIs/news/api.php?action=get&type=news&with_events=true"
 ```
 
 ### Get Next 3 Future Events
 ```bash
-curl "http://your-domain.com/api.php?action=get&type=events&future_only=true&limit=3"
+curl "https://tmhome.tplinkdns.com/APIs/news/api.php?action=get&type=events&future_only=true&limit=3"
 ```
 
 ### Search Events by Name
 ```bash
-curl "http://your-domain.com/api.php?action=get&type=events&name=conference"
+curl "https://tmhome.tplinkdns.com/APIs/news/api.php?action=get&type=events&name=conference"
 ```
 
 ### Get Events in June 2025
 ```bash
-curl "http://your-domain.com/api.php?action=get&type=events&from_date=2025-06-01&to_date=2025-06-30"
+curl "https://tmhome.tplinkdns.com/APIs/news/api.php?action=get&type=events&from_date=2025-06-01&to_date=2025-06-30"
 ```
 
 ## Database Schema
