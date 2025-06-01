@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News & Events Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4facfe;
+            border-bottom: 3px solid #4facfe;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .image-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .image-input {
+            flex: 1;
+        }
+
+        .add-image-btn, .remove-image-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-image-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .add-image-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .remove-image-btn {
+            background: #dc3545;
+            color: white;
+        }
+
+        .remove-image-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            animation: slideIn 0.5s ease;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .connection-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .connection-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .connection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .connection-item input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 News & Events Admin</h1>
+            <p>Add and manage your news articles and events</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('news')">📰 Add News</button>
+            <button class="tab" onclick="switchTab('events')">📅 Add Event</button>
+        </div>
+
+        <div class="form-container">
+            <div id="message"></div>
+
+            <!-- News Form -->
+            <div id="news-form" class="form-section active">
+                <form onsubmit="submitNews(event)">
+                    <div class="form-group">
+                        <label for="news-title">Title *</label>
+                        <input type="text" id="news-title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="news-content">Content *</label>
+                        <textarea id="news-content" required placeholder="Enter the news article content..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Images</label>
+                        <div id="news-images">
+                            <div class="image-input-container">
+                                <input type="text" class="image-input" placeholder="Image URL or filename">
+                                <button type="button" class="add-image-btn" onclick="addImageInput('news')">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="connection-section">
+                        <h3>Connect to Events</h3>
+                        <div id="events-list" class="connection-grid">
+                            <!-- Events will be loaded here -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">📰 Create News Article</button>
+                </form>
+            </div>
+
+            <!-- Events Form -->
+            <div id="events-form" class="form-section">
+                <form onsubmit="submitEvent(event)">
+                    <div class="form-group">
+                        <label for="event-title">Title *</label>
+                        <input type="text" id="event-title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event-content">Content *</label>
+                        <textarea id="event-content" required placeholder="Enter the event description..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="event-date">Event Date & Time *</label>
+                        <input type="datetime-local" id="event-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Images</label>
+                        <div id="event-images">
+                            <div class="image-input-container">
+                                <input type="text" class="image-input" placeholder="Image URL or filename">
+                                <button type="button" class="add-image-btn" onclick="addImageInput('event')">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="connection-section">
+                        <h3>Connect to News</h3>
+                        <div id="news-list" class="connection-grid">
+                            <!-- News will be loaded here -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">📅 Create Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api.php'; // Update this to your API URL
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-form').classList.add('active');
+            
+            if (tab === 'news') {
+                loadEvents();
+            } else {
+                loadNews();
+            }
+        }
+
+        // Add image input
+        function addImageInput(type) {
+            const container = document.getElementById(type + '-images');
+            const div = document.createElement('div');
+            div.className = 'image-input-container';
+            div.innerHTML = `
+                <input type="text" class="image-input" placeholder="Image URL or filename">
+                <button type="button" class="remove-image-btn" onclick="removeImageInput(this)">-</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Remove image input
+        function removeImageInput(btn) {
+            btn.parentElement.remove();
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // Load events for news form
+        async function loadEvents() {
+            try {
+                const response = await fetch(`${API_URL}?action=get&type=events`);
+                const data = await response.json();
+                
+                const container = document.getElementById('events-list');
+                container.innerHTML = '';
+                
+                if (data.success && data.data.length > 0) {
+                    data.data.forEach(event => {
+                        const div = document.createElement('div');
+                        div.className = 'connection-item';
+                        div.innerHTML = `
+                            <input type="checkbox" value="${event.id}" name="connected-events">
+                            <label>${event.title}</label>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<p>No events available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+            }
+        }
+
+        // Load news for events form
+        async function loadNews() {
+            try {
+                const response = await fetch(`${API_URL}?action=get&type=news`);
+                const data = await response.json();
+                
+                const container = document.getElementById('news-list');
+                container.innerHTML = '';
+                
+                if (data.success && data.data.length > 0) {
+                    data.data.forEach(news => {
+                        const div = document.createElement('div');
+                        div.className = 'connection-item';
+                        div.innerHTML = `
+                            <input type="checkbox" value="${news.id}" name="connected-news">
+                            <label>${news.title}</label>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<p>No news available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading news:', error);
+            }
+        }
+
+        // Submit news
+        async function submitNews(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('news-title').value;
+            const content = document.getElementById('news-content').value;
+            const imageInputs = document.querySelectorAll('#news-images .image-input');
+            const images = Array.from(imageInputs)
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            const connectedEvents = Array.from(document.querySelectorAll('input[name="connected-events"]:checked'))
+                .map(cb => cb.value);
+
+            try {
+                const response = await fetch('add_content.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'news',
+                        title: title,
+                        content: content,
+                        images: images,
+                        connected_events: connectedEvents
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('News article created successfully!', 'success');
+                    document.querySelector('#news-form form').reset();
+                    // Reset image inputs to one
+                    document.getElementById('news-images').innerHTML = `
+                        <div class="image-input-container">
+                            <input type="text" class="image-input" placeholder="Image URL or filename">
+                            <button type="button" class="add-image-btn" onclick="addImageInput('news')">+</button>
+                        </div>
+                    `;
+                } else {
+                    showMessage('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Submit event
+        async function submitEvent(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('event-title').value;
+            const content = document.getElementById('event-content').value;
+            const eventDate = document.getElementById('event-date').value;
+            const imageInputs = document.querySelectorAll('#event-images .image-input');
+            const images = Array.from(imageInputs)
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+            
+            const connectedNews = Array.from(document.querySelectorAll('input[name="connected-news"]:checked'))
+                .map(cb => cb.value);
+
+            try {
+                const response = await fetch('add_content.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'event',
+                        title: title,
+                        content: content,
+                        event_date: eventDate,
+                        images: images,
+                        connected_news: connectedNews
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Event created successfully!', 'success');
+                    document.querySelector('#events-form form').reset();
+                    // Reset image inputs to one
+                    document.getElementById('event-images').innerHTML = `
+                        <div class="image-input-container">
+                            <input type="text" class="image-input" placeholder="Image URL or filename">
+                            <button type="button" class="add-image-btn" onclick="addImageInput('event')">+</button>
+                        </div>
+                    `;
+                } else {
+                    showMessage('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, 'error');
+            }
+        }
+
+        // Load initial data
+        loadEvents();
+    </script>
+</body>
+</html>
