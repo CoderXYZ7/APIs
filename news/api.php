@@ -7,8 +7,8 @@ header('Access-Control-Allow-Headers: Content-Type');
 // Database configuration
 $host = 'localhost';
 $dbname = 'news_events_db';
-$username = 'root';
-$password = '';
+$username = 'news_events_db';
+$password = 'newsEventsDBPSW';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

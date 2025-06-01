@@ -43,6 +43,10 @@ CREATE TABLE news_events (
     INDEX idx_event_id (event_id)
 );
 
+CREATE USER 'news_events_db'@'localhost' IDENTIFIED BY 'newsEventsDBPSW';
+GRANT SELECT, INSERT, UPDATE, DELETE ON news_events_db.* TO 'news_events_db'@'localhost';
+FLUSH PRIVILEGES;
+
 -- Insert sample data
 INSERT INTO news (title, content, images) VALUES
 ('Breaking: New Technology Launched', 'A revolutionary new technology has been announced today that will change the industry forever.', '["tech1.jpg", "tech2.jpg"]'),
