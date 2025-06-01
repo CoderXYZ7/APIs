@@ -305,6 +305,100 @@
             border-radius: 12px;
             font-size: 0.8rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .connection-id:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        .connected-item {
+            background: linear-gradient(135deg, #e8f4fd 0%, #f8fafc 100%);
+            border: 2px solid #bee3f8;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .connected-item-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .connected-item-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .connected-item-meta {
+            font-size: 0.8rem;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .connected-item-content {
+            color: #4a5568;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .close-connected {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            transition: all 0.3s ease;
+        }
+
+        .close-connected:hover {
+            background: #c53030;
+            transform: scale(1.1);
+        }
+
+        .loading-connected {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+            color: #667eea;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
         }
 
         .api-info {
@@ -508,16 +602,20 @@
             ).join('');
         }
 
-        function formatConnections(connections, type) {
+        function formatConnections(connections, type, itemId) {
             if (!connections || connections.length === 0) return '';
             
             const title = type === 'news' ? 'Connected Events' : 'Connected News';
-            const ids = connections.map(id => `<span class="connection-id">${id}</span>`).join('');
+            const connectedType = type === 'news' ? 'events' : 'news';
+            const ids = connections.map(id => 
+                `<button class="connection-id" onclick="loadConnectedItem(${id}, '${connectedType}', this, ${itemId})">${id}</button>`
+            ).join('');
             
             return `
                 <div class="connections">
                     <div class="connection-title">${title}:</div>
                     <div class="connection-ids">${ids}</div>
+                    <div id="connected-container-${itemId}" class="connected-container"></div>
                 </div>
             `;
         }
@@ -555,7 +653,7 @@
                         </div>
                         <div class="item-content">${item.content || 'No content available'}</div>
                         ${item.images ? `<div class="item-images">${formatImages(item.images)}</div>` : ''}
-                        ${formatConnections(connections, type)}
+                        ${formatConnections(connections, type, item.id)}
                     </div>
                 `;
             }).join('');
@@ -593,6 +691,87 @@
             } catch (error) {
                 showLoading(false);
                 showError(`Network Error: ${error.message}`);
+            }
+        }
+
+        async function loadConnectedItem(id, type, buttonElement, parentItemId) {
+            const containerId = `connected-container-${parentItemId}`;
+            const container = document.getElementById(containerId);
+            const existingItem = document.getElementById(`connected-item-${id}-${parentItemId}`);
+            
+            // If item already loaded, remove it (toggle functionality)
+            if (existingItem) {
+                existingItem.remove();
+                return;
+            }
+            
+            // Show loading state
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-connected';
+            loadingDiv.id = `loading-${id}-${parentItemId}`;
+            loadingDiv.innerHTML = '🔄 Loading connected item...';
+            container.appendChild(loadingDiv);
+            
+            try {
+                const url = `${API_BASE_URL}?action=get&type=${type}&id=${id}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                // Remove loading div
+                loadingDiv.remove();
+                
+                if (result.error || !result.data || result.data.length === 0) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'connected-item';
+                    errorDiv.innerHTML = `
+                        <div class="connected-item-header">
+                            <div style="color: #e53e3e;">❌ Failed to load ${type} item ${id}</div>
+                            <button class="close-connected" onclick="this.parentElement.parentElement.remove()">×</button>
+                        </div>
+                    `;
+                    container.appendChild(errorDiv);
+                    return;
+                }
+                
+                const item = result.data[0];
+                const connectedDiv = document.createElement('div');
+                connectedDiv.className = 'connected-item';
+                connectedDiv.id = `connected-item-${id}-${parentItemId}`;
+                
+                const isEvent = type === 'events';
+                const dateField = isEvent ? 'event_date' : 'created_at';
+                const typeIcon = isEvent ? '📅' : '📰';
+                
+                connectedDiv.innerHTML = `
+                    <div class="connected-item-header">
+                        <div>
+                            <div class="connected-item-title">${typeIcon} ${item.title || 'Untitled'}</div>
+                            <div class="connected-item-meta">
+                                ID: ${item.id} | ${isEvent ? 'Event Date' : 'Created'}: ${formatDate(item[dateField])}
+                                ${item.updated_at ? ` | Updated: ${formatDate(item.updated_at)}` : ''}
+                            </div>
+                        </div>
+                        <button class="close-connected" onclick="this.parentElement.parentElement.remove()" title="Close">×</button>
+                    </div>
+                    <div class="connected-item-content">${item.content || 'No content available'}</div>
+                    ${item.images && item.images.length > 0 ? `<div class="item-images" style="margin-top: 10px;">${formatImages(item.images)}</div>` : ''}
+                `;
+                
+                container.appendChild(connectedDiv);
+                
+            } catch (error) {
+                // Remove loading div
+                loadingDiv.remove();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'connected-item';
+                errorDiv.innerHTML = `
+                    <div class="connected-item-header">
+                        <div style="color: #e53e3e;">❌ Network error loading ${type} item ${id}</div>
+                        <button class="close-connected" onclick="this.parentElement.parentElement.remove()">×</button>
+                    </div>
+                `;
+                container.appendChild(errorDiv);
             }
         }
 
