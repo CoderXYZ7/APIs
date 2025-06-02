@@ -47,6 +47,8 @@ CREATE USER 'news_events_db'@'localhost' IDENTIFIED BY 'newsEventsDBPSW';
 GRANT SELECT, INSERT, UPDATE, DELETE ON news_events_db.* TO 'news_events_db'@'localhost';
 FLUSH PRIVILEGES;
 
+-- Server hosted on https://tmhome.tplinkdns.com:11533
+
 -- Insert sample data
 INSERT INTO news (title, content, images) VALUES
 ('Breaking: New Technology Launched', 'A revolutionary new technology has been announced today that will change the industry forever.', '["tech1.jpg", "tech2.jpg"]'),
